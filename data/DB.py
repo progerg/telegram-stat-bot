@@ -1,6 +1,8 @@
 import datetime
-from typing import Optional, Any
+from typing import Optional, Any, List
 
+import aiogram.types
+from aiogram import Bot
 from sqlalchemy.future import select
 
 from data.Channel import Channel
@@ -33,34 +35,67 @@ class DB:
         return channel
 
     @staticmethod
-    async def msg_count_up(user_id: int, channel_id: int) -> Member:
+    async def get_channels() -> List[Channel]:
         async with create_session() as sess:
-            result = await sess.execute(select(Member).where(Member.user_id == user_id,
-                                                             Member.channel_id == channel_id,
-                                                             Member.last_message_day > datetime.date.today() -
-                                                             datetime.timedelta(days=30)))
+            result = await sess.execute(select(Channel))
+            channels = result.scalars().all()
+        return channels
+
+    @staticmethod
+    async def update_channel_members(bot: Bot) -> bool:
+        try:
+            async with create_session() as sess:
+                result = await sess.execute(select(Channel))
+                channels = result.scalars().all()
+                for channel in channels:
+                    count = await bot.get_chat_members_count(channel.channel_id)
+                    channel.members_count = count
+                    await sess.commit()
+
+            return True
+        except:
+            return False
+
+    @staticmethod
+    async def get_active_members(channel_id: int) -> List[Member]:
+        async with create_session() as sess:
+            result = await sess.execute(select(Member.id).where(Member.channel_id == channel_id,
+                                                                Member.last_message_day > datetime.date.today() -
+                                                                datetime.timedelta(days=30)))
+            members = result.scalars().all()
+        return members
+
+    @staticmethod
+    async def msg_count_up(user: aiogram.types.User, channel_id: int) -> Member:
+        async with create_session() as sess:
+            result = await sess.execute(select(Member).where(Member.user_id == user.id,
+                                                             Member.channel_id == channel_id))
             member = result.scalars().first()
             if member:
                 member.msg_count += 1
-                member.channel.mes_count += 1
             else:
                 member = Member()
                 member.msg_count = 1
                 member.channel_id = channel_id
-                member.user_id = user_id
-                sess.add()
-            member.last_message_day = datetime.date.today()
+                member.user_id = user.id
+                member.name = user.first_name if 'username' not in user else "@" + user.username
+                sess.add(member)
+            member.channel.mes_count += 1
+            if member.last_message_day != datetime.date.today():
+                member.last_message_day = datetime.date.today()
             await sess.commit()
             return member
 
     @staticmethod
-    async def add_channel(user_id: int, channel_id: int, region_name: str) -> bool:
+    async def add_channel(user_id: int, channel_id: int, region_name: str, members_count: int) -> bool:
         async with create_session() as sess:
             result = await sess.execute(select(User).where(User.user_id == user_id))
             user = result.scalars().first()
             if user:
                 channel = Channel()
                 channel.channel_id = channel_id
+                channel.region_name = region_name
+                channel.members_count = members_count
                 sess.add(channel)
                 await sess.commit()
 
@@ -82,14 +117,3 @@ class DB:
                 return True
             else:
                 return False
-
-    @staticmethod
-    async def reset() -> bool:
-        async with create_session() as sess:
-            result = await sess.execute(select(Member))
-            members = result.scalars().all()
-            for member in members:
-                member.msg_count = 0
-                member.last_message_day = None
-                await sess.commit()
-            return True
