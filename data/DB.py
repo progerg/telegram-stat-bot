@@ -59,7 +59,7 @@ class DB:
     @staticmethod
     async def get_active_members(channel_id: int) -> List[Member]:
         async with create_session() as sess:
-            result = await sess.execute(select(Member.id).where(Member.channel_id == channel_id,
+            result = await sess.execute(select(Member).where(Member.channel_id == channel_id,
                                                                 Member.last_message_day > datetime.date.today() -
                                                                 datetime.timedelta(days=30)))
             members = result.scalars().all()
