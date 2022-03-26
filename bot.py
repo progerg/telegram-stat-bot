@@ -77,7 +77,7 @@ async def get_inline_query_results(items_list: List[Channel]) -> List[types.Inli
         stat_text = MESSAGES['admin']['3'].replace('{region}', item.region_name)\
             .replace('{active}', str(len(members)))\
             .replace('{msg_count}', str(item.mes_count))\
-            .replace('{user}', best_member)
+            .replace('{user}', best_member.name)
         results.append(types.InlineQueryResultArticle(
             id=str(item.id),
             title=item.region_name,
