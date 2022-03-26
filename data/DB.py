@@ -73,19 +73,22 @@ class DB:
             member = result.scalars().first()
             if member:
                 member.msg_count += 1
+                member.channel.mes_count += 1
+                if member.last_message_day != datetime.date.today():
+                    member.last_message_day = datetime.date.today()
             else:
                 member = Member()
                 member.msg_count = 1
                 member.channel_id = channel_id
                 member.user_id = user.id
                 member.name = user.first_name if 'username' not in user else "@" + user.username
-                sess.add(member)
-                await sess.commit()
-            member.channel.mes_count += 1
-            if member.last_message_day != datetime.date.today():
                 member.last_message_day = datetime.date.today()
+                sess.add(member)
+                result = await sess.execute(select(Channel).where(Channel.channel_id == channel_id))
+                channel = result.scalars().first()
+                channel.mes_count += 1
             await sess.commit()
-            return member
+        return member
 
     @staticmethod
     async def add_channel(user_id: int, channel_id: int, region_name: str, members_count: int) -> bool:
