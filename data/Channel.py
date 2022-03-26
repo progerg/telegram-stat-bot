@@ -10,6 +10,6 @@ class Channel(SqlAlchemyBase):
     members_count = sqlalchemy.Column(sqlalchemy.Integer)
     members = orm.relationship('Member', back_populates='channel', lazy='selectin')
     region_name = sqlalchemy.Column(sqlalchemy.VARCHAR(50))
-    channel_id = sqlalchemy.Column(sqlalchemy.Integer, unique=True)
+    channel_id = sqlalchemy.Column(sqlalchemy.BigInteger, unique=True)
     mes_count = sqlalchemy.Column(sqlalchemy.BigInteger, default=0)
     user = orm.relationship('User', back_populates='channel', lazy='selectin')
