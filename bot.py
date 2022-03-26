@@ -94,7 +94,7 @@ async def get_inline_query_results(items_list: List[Channel]) -> List[types.Inli
 async def empty_query(query: types.InlineQuery):
     regions_list = await db.get_channels()
     results = await get_inline_query_results(regions_list)
-    await query.answer(results=results, cache_time=1)
+    await query.answer(results=results, cache_time=20)
 
 
 @dp.message_handler(chat_type=[ChatType.GROUP, ChatType.SUPERGROUP])
