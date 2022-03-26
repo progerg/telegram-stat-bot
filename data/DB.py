@@ -80,6 +80,7 @@ class DB:
                 member.user_id = user.id
                 member.name = user.first_name if 'username' not in user else "@" + user.username
                 sess.add(member)
+                await sess.commit()
             member.channel.mes_count += 1
             if member.last_message_day != datetime.date.today():
                 member.last_message_day = datetime.date.today()
