@@ -116,7 +116,7 @@ async def scheduler():
 
 async def startup_(_):
     await global_init(user=DB_LOGIN, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT, dbname=DB_NAME)
-    # asyncio.create_task(scheduler())
+    asyncio.create_task(scheduler())
 
 
 if __name__ == '__main__':
