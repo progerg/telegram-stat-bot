@@ -48,6 +48,6 @@ ADMINS = [000000000]
 <h3>Запуск бота</h3>
 
 ```bash
-pip install requirements.txt
+pip install -r requirements.txt
 python bot.py
 ```
