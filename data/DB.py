@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 from typing import Optional, Any, List
 
@@ -51,6 +52,7 @@ class DB:
                     count = await bot.get_chat_members_count(channel.channel_id)
                     channel.members_count = count
                     await sess.commit()
+                    await asyncio.sleep(0.5)
 
             return True
         except:

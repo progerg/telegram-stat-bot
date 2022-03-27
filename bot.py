@@ -48,6 +48,16 @@ async def mail_command(message: types.Message):
                     await message.answer(MESSAGES['bot']['3'].replace('{region}', channel.region_name))
 
 
+@dp.message_handler(commands=['top'])
+async def top_command(message: types.Message):
+    channels = await db.get_channels()
+    msg = ''
+    channels.sort(key=lambda x: x.members_count, reverse=True)
+    for n, channel in enumerate(channels):
+        msg += f'{n}. {channel.region_name}'
+    await message.answer(msg)
+
+
 @dp.message_handler(chat_type=[ChatType.GROUP, ChatType.SUPERGROUP], commands=['add_bot'])
 async def add_bot(message: types.Message):
     user = await db.get_user(message.from_user.id)
