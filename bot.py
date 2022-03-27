@@ -54,7 +54,7 @@ async def top_command(message: types.Message):
     msg = ''
     channels.sort(key=lambda x: x.members_count, reverse=True)
     for n, channel in enumerate(channels):
-        msg += f'{n}. {channel.region_name}'
+        msg += f'{n + 1}. {channel.region_name}'
     await message.answer(msg)
 
 
