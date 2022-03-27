@@ -2,3 +2,4 @@ aiogram==2.18
 aioschedule==0.5.2
 SQLAlchemy==1.4.29
 aiomysql==0.0.22
+cryptography==36.0.2
