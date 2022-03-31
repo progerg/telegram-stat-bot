@@ -140,7 +140,7 @@ async def get_regions_stats():
                             data = html.split('</div>')[0]
                             member_count = data.split('members')[0][:-1]
                         except IndexError:
-                            return
+                            continue
                 if ' ' in member_count:
                     member_count = int("".join(member_count.split(" ")))
                 else:

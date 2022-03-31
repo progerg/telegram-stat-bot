@@ -25,7 +25,7 @@ async def main():
                             data = html.split('</div>')[0]
                             members_count = data.split('members')[0][:-1]
                         except IndexError:
-                            return
+                            continue
                 if ' ' in members_count:
                     members_count = int("".join(members_count.split(" ")))
                 else:
