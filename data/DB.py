@@ -9,6 +9,7 @@ from sqlalchemy.future import select
 from data.Channel import Channel
 from data.Member import Member
 from data.User import User
+from data.RegionStat import RegionStat
 from data.db_session import create_session
 
 
@@ -27,6 +28,13 @@ class DB:
                                                              Member.channel_id == channel_id))
             member = result.scalars().first()
         return member
+
+    @staticmethod
+    async def get_regions_stat() -> List[RegionStat]:
+        async with create_session() as sess:
+            result = await sess.execute(select(RegionStat))
+            regions = result.scalars().all()
+        return regions
 
     @staticmethod
     async def get_channel(channel_id: int) -> Channel:

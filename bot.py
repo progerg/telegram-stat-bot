@@ -2,6 +2,7 @@ import asyncio
 import logging
 from typing import List
 
+import aiohttp
 from aiogram import types
 
 import aioschedule
@@ -10,11 +11,15 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.types import ChatType
 from aiogram.utils import executor
+from sqlalchemy.future import select
+
+from channel_url import CHANNEL_TO_URL
 
 from config import *
 from data.Channel import Channel
 from data.DB import DB
-from data.db_session import global_init
+from data.RegionStat import RegionStat
+from data.db_session import global_init, create_session
 from texts.messages import MESSAGES
 
 bot = Bot(token=BOT_TOKEN)
@@ -120,8 +125,25 @@ async def shutdown(dispatcher: Dispatcher):
     await dispatcher.storage.wait_closed()
 
 
+async def get_regions_stats():
+    for region, url in CHANNEL_TO_URL.items():
+        async with create_session as sess:
+            result = await sess.execute(select(RegionStat).where(RegionStat.region_name == region))
+            region_stat = result.scalars().first()
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    html = await response.text()
+                    html = html.split('<div class="tgme_page_extra">')[1]
+                    data = html.split('</div>')[0]
+                    member_count = data.split('members')[0][:-1]
+            region_stat.members_count = member_count
+            await sess.commit()
+
+
 async def scheduler():
     aioschedule.every(60).minutes.do(db.update_channel_members(bot))
+    aioschedule.every(60).minutes.do(get_regions_stats())
     while True:
         await aioschedule.run_pending()
         await asyncio.sleep(1)
