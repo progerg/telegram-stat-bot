@@ -55,11 +55,11 @@ async def mail_command(message: types.Message):
 
 @dp.message_handler(commands=['top'])
 async def top_command(message: types.Message):
-    channels = await db.get_channels()
+    channels = await db.get_regions_stat()
     msg = 'Топ по количеству участников:\n'
     channels.sort(key=lambda x: x.members_count, reverse=True)
-    for n, channel in enumerate(channels):
-        msg += f'{n + 1}. {channel.region_name} - {channel.members_count}'
+    for n, region in enumerate(channels):
+        msg += f'{n + 1}. {region.region_name} - {region.members_count}'
     await message.answer(msg)
 
 
