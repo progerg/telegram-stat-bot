@@ -59,7 +59,7 @@ async def top_command(message: types.Message):
     msg = 'Топ по количеству участников:\n'
     channels.sort(key=lambda x: x.members_count, reverse=True)
     for n, region in enumerate(channels):
-        msg += f'{n + 1}. {region.region_name} - {region.members_count}'
+        msg += f'{n + 1}. {region.region_name} - {region.members_count}\n'
     await message.answer(msg)
 
 
