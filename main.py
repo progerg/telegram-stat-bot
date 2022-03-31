@@ -23,6 +23,10 @@ async def main():
                         html = html.split('<div class="tgme_page_extra">')[1]
                         data = html.split('</div>')[0]
                         members_count = data.split('members')[0][:-1]
+                if ' ' in members_count:
+                    members_count = int("".join(members_count.split(" ")))
+                else:
+                    members_count = int(members_count)
                 region = RegionStat()
                 region.region_name = key
                 region.members_count = members_count

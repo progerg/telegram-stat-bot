@@ -138,6 +138,10 @@ async def get_regions_stats():
                         html = html.split('<div class="tgme_page_extra">')[1]
                         data = html.split('</div>')[0]
                         member_count = data.split('members')[0][:-1]
+                if ' ' in member_count:
+                    member_count = int("".join(member_count.split(" ")))
+                else:
+                    member_count = int(member_count)
                 region_stat.members_count = member_count
                 await sess.commit()
 
