@@ -127,18 +127,19 @@ async def shutdown(dispatcher: Dispatcher):
 
 async def get_regions_stats():
     for region, url in CHANNEL_TO_URL.items():
-        async with create_session as sess:
-            result = await sess.execute(select(RegionStat).where(RegionStat.region_name == region))
-            region_stat = result.scalars().first()
+        if url:
+            async with create_session as sess:
+                result = await sess.execute(select(RegionStat).where(RegionStat.region_name == region))
+                region_stat = result.scalars().first()
 
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url) as response:
-                    html = await response.text()
-                    html = html.split('<div class="tgme_page_extra">')[1]
-                    data = html.split('</div>')[0]
-                    member_count = data.split('members')[0][:-1]
-            region_stat.members_count = member_count
-            await sess.commit()
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url) as response:
+                        html = await response.text()
+                        html = html.split('<div class="tgme_page_extra">')[1]
+                        data = html.split('</div>')[0]
+                        member_count = data.split('members')[0][:-1]
+                region_stat.members_count = member_count
+                await sess.commit()
 
 
 async def scheduler():
