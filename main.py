@@ -19,10 +19,13 @@ async def main():
             async with create_session() as sess:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(value) as response:
-                        html = await response.text()
-                        html = html.split('<div class="tgme_page_extra">')[1]
-                        data = html.split('</div>')[0]
-                        members_count = data.split('members')[0][:-1]
+                        try:
+                            html = await response.text()
+                            html = html.split('<div class="tgme_page_extra">')[1]
+                            data = html.split('</div>')[0]
+                            members_count = data.split('members')[0][:-1]
+                        except IndexError:
+                            return
                 if ' ' in members_count:
                     members_count = int("".join(members_count.split(" ")))
                 else:
