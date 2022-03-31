@@ -147,6 +147,7 @@ async def get_regions_stats():
                     member_count = int(member_count)
                 region_stat.members_count = member_count
                 await sess.commit()
+                await asyncio.sleep(0.5)
 
 
 async def scheduler():

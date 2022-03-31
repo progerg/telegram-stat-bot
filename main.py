@@ -35,6 +35,7 @@ async def main():
                 region.members_count = members_count
                 sess.add(region)
                 await sess.commit()
+                await asyncio.sleep(0.5)
 
 
 asyncio.run(main())
