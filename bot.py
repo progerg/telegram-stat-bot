@@ -83,11 +83,14 @@ async def get_inline_query_results(items_list: List[Channel]) -> List[types.Inli
     results = []
     for item in items_list:
         members = await db.get_active_members(channel_id=item.channel_id)
-        best_member = max(members, key=lambda member: member.msg_count)
+        best_member = sorted(members, key=lambda member: member.msg_count)
         stat_text = MESSAGES['admin']['3'].replace('{region}', item.region_name)\
             .replace('{active}', str(len(members)))\
-            .replace('{msg_count}', str(item.mes_count))\
-            .replace('{user}', best_member.name)
+            .replace('{msg_count}', str(item.mes_count))
+
+        for n, member_ in enumerate(best_member[:5]):
+            stat_text += f'{n + 1}. {member_.name} - {member_.msg_count}\n'
+
         results.append(types.InlineQueryResultArticle(
             id=str(item.id),
             title=item.region_name,
