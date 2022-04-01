@@ -1,7 +1,7 @@
 import asyncio
 
 from data.RegionStat import RegionStat
-from channel_url import CHANNEL_TO_URL
+from channel_to_url import CHANNEL_TO_URL
 
 import aiohttp
 from config import *

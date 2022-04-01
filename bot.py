@@ -13,7 +13,7 @@ from aiogram.types import ChatType
 from aiogram.utils import executor
 from sqlalchemy.future import select
 
-from channel_url import CHANNEL_TO_URL
+from channel_to_url import CHANNEL_TO_URL
 
 from config import *
 from data.Channel import Channel
