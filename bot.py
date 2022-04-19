@@ -2,6 +2,7 @@ import asyncio
 import logging
 from typing import List
 
+import aiohttp
 from aiogram import types
 
 import aioschedule
@@ -12,9 +13,12 @@ from aiogram.types import ChatType
 from aiogram.utils import executor
 from sqlalchemy.future import select
 
+from channel_to_url import CHANNEL_TO_URL
+
 from config import *
 from data.Channel import Channel
 from data.DB import DB
+from data.RegionStat import RegionStat
 from data.db_session import global_init, create_session
 from texts.messages import MESSAGES
 
@@ -51,11 +55,11 @@ async def mail_command(message: types.Message):
 
 @dp.message_handler(commands=['top'])
 async def top_command(message: types.Message):
-    channels = await db.get_channels()
+    channels = await db.get_regions_stat()
     msg = 'Топ по количеству участников:\n'
     channels.sort(key=lambda x: x.members_count, reverse=True)
-    for n, channel in enumerate(channels):
-        msg += f'{n + 1}. {channel.region_name} - {channel.members_count}'
+    for n, region in enumerate(channels):
+        msg += f'{n + 1}. {region.region_name} - {region.members_count}\n'
     await message.answer(msg)
 
 
@@ -84,11 +88,14 @@ async def get_inline_query_results(items_list: List[Channel]) -> List[types.Inli
     results = []
     for item in items_list:
         members = await db.get_active_members(channel_id=item.channel_id)
-        best_member = max(members, key=lambda member: member.msg_count)
+        best_member = sorted(members, key=lambda member: member.msg_count, reverse=True)
         stat_text = MESSAGES['admin']['3'].replace('{region}', item.region_name)\
             .replace('{active}', str(len(members)))\
-            .replace('{msg_count}', str(item.mes_count))\
-            .replace('{user}', best_member.name)
+            .replace('{msg_count}', str(item.mes_count))
+
+        for n, member_ in enumerate(best_member[:5]):
+            stat_text += f'{n + 1}. {member_.name} - {member_.msg_count}\n'
+
         results.append(types.InlineQueryResultArticle(
             id=str(item.id),
             title=item.region_name,
@@ -118,24 +125,34 @@ async def shutdown(dispatcher: Dispatcher):
     await dispatcher.storage.wait_closed()
 
 
-async def update_channel_members(bot: Bot) -> bool:
-    try:
-        async with create_session() as sess:
-            result = await sess.execute(select(Channel))
-            channels = result.scalars().all()
-            for channel in channels:
-                count = await bot.get_chat_members_count(channel.channel_id)
-                channel.members_count = count
+async def get_regions_stats():
+    for region, url in CHANNEL_TO_URL.items():
+        if url:
+            async with create_session as sess:
+                result = await sess.execute(select(RegionStat).where(RegionStat.region_name == region))
+                region_stat = result.scalars().first()
+
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url) as response:
+                        try:
+                            html = await response.text()
+                            html = html.split('<div class="tgme_page_extra">')[1]
+                            data = html.split('</div>')[0]
+                            member_count = data.split('members')[0][:-1]
+                        except IndexError:
+                            continue
+                if ' ' in member_count:
+                    member_count = int("".join(member_count.split(" ")))
+                else:
+                    member_count = int(member_count)
+                region_stat.members_count = member_count
                 await sess.commit()
                 await asyncio.sleep(0.5)
 
-        return True
-    except:
-        return False
-
 
 async def scheduler():
-    aioschedule.every(1).hours.do(update_channel_members(bot))
+    aioschedule.every(60).minutes.do(db.update_channel_members(bot))
+    aioschedule.every(6).hours.do(get_regions_stats())
     while True:
         await aioschedule.run_pending()
         await asyncio.sleep(1)
