@@ -128,7 +128,7 @@ async def shutdown(dispatcher: Dispatcher):
 async def get_regions_stats():
     for region, url in CHANNEL_TO_URL.items():
         if url:
-            async with create_session as sess:
+            async with create_session() as sess:
                 result = await sess.execute(select(RegionStat).where(RegionStat.region_name == region))
                 region_stat = result.scalars().first()
 
