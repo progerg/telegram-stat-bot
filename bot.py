@@ -10,11 +10,12 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
 from aiogram.types import ChatType
 from aiogram.utils import executor
+from sqlalchemy.future import select
 
 from config import *
 from data.Channel import Channel
 from data.DB import DB
-from data.db_session import global_init
+from data.db_session import global_init, create_session
 from texts.messages import MESSAGES
 
 bot = Bot(token=BOT_TOKEN)
@@ -117,8 +118,24 @@ async def shutdown(dispatcher: Dispatcher):
     await dispatcher.storage.wait_closed()
 
 
+async def update_channel_members(bot: Bot) -> bool:
+    try:
+        async with create_session() as sess:
+            result = await sess.execute(select(Channel))
+            channels = result.scalars().all()
+            for channel in channels:
+                count = await bot.get_chat_members_count(channel.channel_id)
+                channel.members_count = count
+                await sess.commit()
+                await asyncio.sleep(0.5)
+
+        return True
+    except:
+        return False
+
+
 async def scheduler():
-    aioschedule.every(60).minutes.do(db.update_channel_members(bot))
+    aioschedule.every(1).hours.do(update_channel_members(bot))
     while True:
         await aioschedule.run_pending()
         await asyncio.sleep(1)
