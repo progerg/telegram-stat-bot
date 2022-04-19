@@ -151,7 +151,6 @@ async def get_regions_stats():
 
 
 async def scheduler():
-    aioschedule.every(60).minutes.do(db.update_channel_members(bot))
     aioschedule.every(6).hours.do(get_regions_stats())
     while True:
         await aioschedule.run_pending()
