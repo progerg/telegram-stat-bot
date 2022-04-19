@@ -158,8 +158,8 @@ async def scheduler():
 
 
 async def startup_(_):
-    await get_regions_stats()
     await global_init(user=DB_LOGIN, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT, dbname=DB_NAME)
+    await get_regions_stats()
     asyncio.create_task(scheduler())
 
 
