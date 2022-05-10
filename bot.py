@@ -151,7 +151,7 @@ async def get_regions_stats():
 
 
 async def scheduler():
-    aioschedule.every(6).hours.do(get_regions_stats())
+    aioschedule.every(6).hours.do(get_regions_stats)
     while True:
         await aioschedule.run_pending()
         await asyncio.sleep(1)
